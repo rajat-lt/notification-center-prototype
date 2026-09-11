@@ -8,10 +8,12 @@ KaneAI generation), and the bell is where you find out.
 
 The design spec lives in [`notification-center.md`](notification-center.md), written in the
 `design-context/patterns/` house format. The prototype implements it: `LTTabNav`-style
-**Unread / All** tabs with an `LTCounterLabel`-style count, a 400px panel at viewport-fixed
-height, newest-first feed over a 14-day window with lazy loading, one primary + one secondary
-action per actionable row (primary on the right, small), initials-only avatars, and the
-panel-local short time formats (`2:34 PM` today, `Sep 10` before that).
+**Unread / All** tabs with an `LTCounterLabel`-style count, a 400px panel that hugs its
+content up to 60% of the viewport and carries a caret pointing at the bell, a newest-first
+feed over a 14-day window with lazy loading, rows that slide in from the left as they
+appear, one primary + one secondary action per actionable row (left-aligned under the text,
+primary on the right, small), initials-only avatars, and the panel-local short time formats
+(`2:34 PM` today, `Sep 10` before that).
 
 **Live demo:** https://rajat-lt.github.io/notification-center-prototype/ — click the bell.
 
@@ -27,9 +29,11 @@ npm run build      # static build in dist/
 
 - The panel fetches on first open (brief loader), 20 rows per page; scrolling near the bottom
   loads the next page under a small foot loader, and the feed ends with
-  "Showing the last 14 days."
-- A new notification arrives ~18 seconds in: the row lands on top, the bell badge and the
-  Unread counter tick up, a polite live region announces it.
+  "Showing the last 14 days." Rows slide in from the left, one after another, each time a
+  batch appears — on open, on a tab switch, and on every lazy-loaded page.
+- A new notification arrives ~18 seconds in: the row slides in at the top, the bell badge and
+  the Unread counter tick up, a polite live region announces it, and the scroll position is
+  held so an arrival never shoves the feed out from under a reader.
 - Opening a row marks it read (the row leaves Unread, keeps its place in All). Navigation to
   the underlying entity is stubbed — announced, not performed.
 - **The invite's first Accept deliberately fails**, to exercise the row-level inline error;

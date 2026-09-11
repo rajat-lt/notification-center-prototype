@@ -241,15 +241,26 @@ a.crumb:hover { color: var(--accent); text-decoration: underline; }
 .anchor { position: relative; }
 
 /* 400px — the middle step of the side-pane scale (guidelines/README.md §2).
-   Height is viewport-fixed: top 8px under the 56px bar, 16px bottom inset →
-   calc(100vh − 80px). Only the list region scrolls (§3.2). Surface is
-   canvas.overlay with the floating/small composite. */
+   Height HUGS the content and stops at 60% of the viewport: a three-row Unread
+   tab is a three-row panel, All hits the ceiling and scrolls inside (§3.2).
+   Only the list region scrolls. Surface is canvas.overlay with the
+   floating/small composite. */
 .npanel {
   position: absolute; top: calc(100% + 20px); right: 0; z-index: 130;
-  width: 400px; height: calc(100vh - 80px);
+  width: 400px; max-height: 60vh;
   display: flex; flex-direction: column;
   background: var(--bg); border-radius: 8px;
   box-shadow: var(--shadow-floating-small);
+}
+
+/* Caret pointing at the bell: a rotated square sharing the panel's surface and
+   hairline, centred on the bell's 32px box — the panel's right edge is the
+   bell's right edge, so 16px in, less half the caret (§3.2). */
+.npanel::before {
+  content: ""; position: absolute; top: -6px; right: 10px;
+  width: 12px; height: 12px; border-radius: 2px 0 0 0;
+  background: var(--bg); transform: rotate(45deg);
+  box-shadow: -1px -1px 0 0 rgba(208, 215, 222, 0.6);
 }
 .npanel:focus { outline: none; }
 .npanel:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -287,7 +298,9 @@ a.crumb:hover { color: var(--accent); text-decoration: underline; }
   color: var(--fg); line-height: 1;
 }
 
-.npanel-list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+/* flex-basis auto, not 0: the list must contribute its content height so the
+   panel can size to it, then shrink when the 60vh ceiling bites. */
+.npanel-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .npanel-pad { padding: 16px; }
 
 /* ---------- notification row ---------- */
@@ -298,6 +311,15 @@ a.crumb:hover { color: var(--accent); text-decoration: underline; }
   border-bottom: 1px solid var(--border-hairline);
   cursor: pointer;
   content-visibility: auto; contain-intrinsic-size: auto 72px;
+  /* Entrance: slide in from the left. `both` holds the row hidden through its
+     stagger delay, so a page arrives row by row instead of all at once (§3.8).
+     16px and 260ms keep it quick and small — the row travels less than half its
+     own height. */
+  animation: slide-in-left 260ms ease-in both;
+}
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: none; }
 }
 .nrow:hover { background: var(--chrome-hover); }
 /* Unread sits on the canvas.subtle tint — tint + dot + SR text, never colour
@@ -328,9 +350,10 @@ a.crumb:hover { color: var(--accent); text-decoration: underline; }
 }
 .nrow-meta .dot { margin: 0 4px; }
 
-/* Secondary left, primary right, hard right (README §7 + the brief). */
-.nrow-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
-.resolved { margin: 8px 0 0; font-size: 12px; color: var(--fg-muted); text-align: right; }
+/* The pair sits under the text, left-aligned to it — a row's inline actions are
+   not a footer. Secondary then primary is the part that carries over (§5.9). */
+.nrow-actions { display: flex; justify-content: flex-start; gap: 8px; margin-top: 8px; }
+.resolved { margin: 8px 0 0; font-size: 12px; color: var(--fg-muted); }
 
 .attach {
   display: inline-flex; align-items: center; gap: 6px; max-width: 100%;
@@ -341,7 +364,7 @@ a.crumb:hover { color: var(--accent); text-decoration: underline; }
 .attach-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .inline-err {
-  display: flex; align-items: center; gap: 6px; justify-content: flex-end;
+  display: flex; align-items: center; gap: 6px;
   margin: 6px 0 0; font-size: 12px; color: var(--danger);
 }
 
@@ -385,5 +408,7 @@ a.crumb:hover { color: var(--accent); text-decoration: underline; }
 
 @media (prefers-reduced-motion: reduce) {
   .loader, .btnspin { animation: none !important; }
+  /* Rows appear in place — no slide, no stagger. */
+  .nrow { animation: none !important; }
   .rail { transition: none; }
 }
