@@ -179,13 +179,31 @@ export const liveArrival = n(TODAY, '2:41 PM', system('failed'),
 /* Plain-text title for announcements and accessible names. */
 export const titleOf = row => row.frags.map(f => f[0]).join('')
 
-/* The minimal page behind the panel: the Test Manager project listing shape,
-   relative timestamps per the ≤30-days rule in mock-data.md. */
+/* The page behind the panel: Test Manager's project listing, built from
+   design-context/patterns/project-listing.md.
+ *
+ * Names are the approved list in mock-data.md — all nine of them, which is the
+ * entire list (see the note below); owners are the approved cast. The awkward
+ * rows the pattern asks for: a zero-count project, k-formatted counts
+ * (1.24k / 5.2k — trailing zeros trimmed), and two single-letter avatars.
+ *
+ * Updated dates follow the 30-day rule: relative under 30 days, absolute
+ * `MMM DD, YYYY` with a zero-padded day beyond it. Today is Sep 11, 2026, so
+ * the boundary falls on Aug 12 and the last three rows cross it.
+ *
+ * [GAP — mock-data.md] The pattern also wants "a very long project name" to
+ * stress row truncation, and the approved list has none: the longest is
+ * "Desktop website". Flagged rather than invented (mock-data.md hard rule:
+ * if a value you need is not there, flag it).
+ */
 export const PROJECTS = [
-  { name: 'Web app', meta: 'Updated 2 days ago' },
-  { name: 'Mobile app', meta: 'Updated 4 days ago' },
-  { name: 'iPad app', meta: 'Updated 9 days ago' },
-  { name: 'Desktop website', meta: 'Updated 12 days ago' },
-  { name: 'Internal HRMS', meta: 'Updated 22 days ago' },
-  { name: 'Watch app', meta: 'Updated 28 days ago' },
+  { name: 'Web app', tag: null, testCases: '1.24k', testRuns: 86, updated: 'Updated 2 days ago', owner: person('Ritika Sharma') },
+  { name: 'Mobile app', tag: null, testCases: '482', testRuns: 36, updated: 'Updated 4 days ago', owner: person('Mahendra Damodardas Baahubali') },
+  { name: 'iPad app', tag: 'Zephyr Scale Import', testCases: '96', testRuns: 12, updated: 'Updated 9 days ago', owner: person('Darth Vader') },
+  { name: 'Mobile web', tag: null, testCases: '318', testRuns: 24, updated: 'Updated 12 days ago', owner: person('Oppenheimer') },
+  { name: 'Desktop website', tag: null, testCases: '5.2k', testRuns: 212, updated: 'Updated 22 days ago', owner: person('George Orwell') },
+  { name: 'Internal HRMS', tag: null, testCases: '0', testRuns: 0, updated: 'Updated 28 days ago', owner: person('Kokushibo') },
+  { name: 'Blog website', tag: 'Zephyr Scale Import', testCases: '61', testRuns: 5, updated: 'Updated on Aug 02, 2026', owner: person('Gabbar Singh') },
+  { name: 'TV app', tag: null, testCases: '128', testRuns: 9, updated: 'Updated on Jul 19, 2026', owner: person('Mehmed Dracul') },
+  { name: 'Watch app', tag: null, testCases: '24', testRuns: 3, updated: 'Updated on Jun 30, 2026', owner: person('Ritika Sharma') },
 ]
