@@ -1,12 +1,18 @@
 // The notification center: bell trigger + anchored panel, implementing
 // notifications/notification-center.md. LTAnchoredOverlay-shaped assembly —
 // icon-button anchor with a counter, opening a right-aligned overlay below it.
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   BellIcon, BellLargeIcon, Badge, Tip, Btn, Avatar, StatusIcon, TabNav,
   BlankSlate, Loader, Flash, InlineError, PaperclipIcon,
 } from './lt.jsx'
 import { TODAY, PAGE_SIZE, shortDate, initialNotifications, liveArrival, titleOf } from './data.js'
+
+/* Entrance stagger: rows slide in one by one, quickly. 45ms apart is enough to
+   read as sequential without the last row of a page feeling late; the cap stops
+   a 20-row page from taking a second to settle (notification-center.md §3.8). */
+const STAGGER_MS = 45
+const STAGGER_CAP_MS = 450
 
 /* Today → "2:34 PM"; yesterday and older → "Sep 10" (panel-local formats,
    notification-center.md §5 decision 7). Viewer-local, no timezone suffix. */
@@ -45,7 +51,7 @@ function RowSlot({ row, state, onAccept, onDecline, announce }) {
   return null
 }
 
-function NotificationRow({ row, state, onOpen, onAccept, onDecline, announce }) {
+function NotificationRow({ row, state, enterDelay, onOpen, onAccept, onDecline, announce }) {
   /* The text block is the row's one navigation target; the full row extends
      its hit area. Buttons and the attachment stay separate tab stops
      (notification-center.md §3.4). Navigation itself is stubbed here. */
@@ -53,8 +59,12 @@ function NotificationRow({ row, state, onOpen, onAccept, onDecline, announce }) 
     if (e.target.closest('button, a')) return
     onOpen(row)
   }
+  /* The slide-in runs on mount, so it fires exactly where it should: the panel
+     opening, a tab switch, a lazy-loaded page, a live arrival — and never on a
+     row that merely re-rendered (§3.8). */
   return (
-    <article className={`nrow${row.read ? '' : ' unread'}`} onClick={openFromRow}>
+    <article className={`nrow${row.read ? '' : ' unread'}`}
+      style={{ animationDelay: `${enterDelay}ms` }} onClick={openFromRow}>
       <span className="nrow-avatar" aria-hidden={row.actor.system ? 'true' : undefined}>
         {row.actor.system
           ? <span className="sys-avatar"><StatusIcon status={row.actor.system} /></span>
@@ -95,6 +105,11 @@ export function NotificationCenter({ mode, announce }) {
   const bellRef = useRef(null)
   const panelRef = useRef(null)
   const listRef = useRef(null)
+  /* row id → its stagger delay, assigned once and never recomputed, so a
+     re-render can't restart a row's entrance. Cleared when a batch should
+     restart from zero (panel opens, tab switches). */
+  const enterDelays = useRef(new Map())
+  const pendingScroll = useRef(null)
 
   const unreadCount = items.filter(x => !x.read).length
   /* Badge: hidden at zero; count unknown while the service errors or loads. */
@@ -117,11 +132,23 @@ export function NotificationCenter({ mode, announce }) {
   useEffect(() => {
     if (mode) return
     const t = setTimeout(() => {
+      /* Keep the reader's place: a row inserted above them must not shove the
+         feed down mid-read (§3.5). Measured before the insert, corrected after. */
+      const el = listRef.current
+      if (el) pendingScroll.current = { top: el.scrollTop, height: el.scrollHeight }
       setItems(prev => (prev.some(x => x.id === liveArrival.id) ? prev : [liveArrival, ...prev]))
       announce(`New notification: ${titleOf(liveArrival)}`)
     }, 18000)
     return () => clearTimeout(t)
   }, [mode, announce])
+
+  useLayoutEffect(() => {
+    const p = pendingScroll.current
+    if (!p) return
+    pendingScroll.current = null
+    const el = listRef.current
+    if (el && p.top > 0) el.scrollTop = p.top + (el.scrollHeight - p.height)
+  }, [items])
 
   const close = useCallback((refocus = false) => {
     setOpen(false)
@@ -154,7 +181,18 @@ export function NotificationCenter({ mode, announce }) {
   const shown = list.slice(0, visible)
   const exhausted = visible >= list.length
 
+  /* Any row rendered for the first time joins the current batch and takes the
+     next stagger slot; rows already on screen keep the delay they were given.
+     One rule covers all four entrances — open, tab switch, lazy page, arrival. */
+  let freshInBatch = 0
+  const delayFor = id => {
+    const map = enterDelays.current
+    if (!map.has(id)) map.set(id, Math.min(freshInBatch++ * STAGGER_MS, STAGGER_CAP_MS))
+    return map.get(id)
+  }
+
   const pickTab = id => {
+    enterDelays.current.clear()
     setTab(id)
     setVisible(PAGE_SIZE)
     if (listRef.current) listRef.current.scrollTop = 0
@@ -226,7 +264,11 @@ export function NotificationCenter({ mode, announce }) {
   const bellBtn = (
     <button ref={bellRef} type="button" className="btn iconbtn outline bell"
       aria-label={bellLabel} aria-haspopup="dialog" aria-expanded={open}
-      onClick={() => (open ? close() : setOpen(true))}>
+      onClick={() => {
+        if (open) { close(); return }
+        enterDelays.current.clear() // the batch restarts every time the panel opens
+        setOpen(true)
+      }}>
       <BellIcon />
       <Badge count={badgeCount} />
     </button>
@@ -276,11 +318,19 @@ export function NotificationCenter({ mode, announce }) {
                 description="Activity that involves you — runs, builds, shares, invites — shows up here." />
             )}
 
-            {phase === 'ready' && shown.map(row => (
-              <NotificationRow key={row.id} row={row} state={actionState[row.id]}
-                onOpen={openRow} onAccept={() => accept(row)} onDecline={() => decline(row)}
-                announce={announce} />
-            ))}
+            {/* Keyed on the tab so switching remounts every row — otherwise the
+                rows a tab shares with the one before it would sit still while
+                the rest slid in. */}
+            {phase === 'ready' && (
+              <Fragment key={tab}>
+                {shown.map(row => (
+                  <NotificationRow key={row.id} row={row} state={actionState[row.id]}
+                    enterDelay={delayFor(row.id)}
+                    onOpen={openRow} onAccept={() => accept(row)} onDecline={() => decline(row)}
+                    announce={announce} />
+                ))}
+              </Fragment>
+            )}
 
             {phase === 'ready' && loadingMore && (
               <div className="center pad8"><Loader small label="Loading older notifications" /></div>

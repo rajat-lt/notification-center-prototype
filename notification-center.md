@@ -1,6 +1,6 @@
 # Pattern: Notification center
 
-A **new platform surface** — it does not exist in the product yet. Drafted 11 Sep 2026 from a feature brief by Rajat Garg plus one reference mock (a Figma-style notifications popover); unlike the observed page patterns this is a proposal, so everything is either grounded in an existing pattern, cited to a guideline, matched to the reference mock, or flagged `[proposed]`. Where this pattern deliberately departs from the reference mock, §6 records it. Revised later the same day from Rajat's review: `LTTabNav` replaces `LTUnderlineNav` inside the panel (§5, decision 3), the short time formats are a panel-local exception with no guideline changes (§5, decision 7), and lazy loading rides the existing feed idiom rather than a rule amendment (§3.6).
+A **new platform surface** — it does not exist in the product yet. Drafted 11 Sep 2026 from a feature brief by Rajat Garg plus one reference mock (a Figma-style notifications popover); unlike the observed page patterns this is a proposal, so everything is either grounded in an existing pattern, cited to a guideline, matched to the reference mock, or flagged `[proposed]`. Where this pattern deliberately departs from the reference mock, §6 records it. Revised later the same day from Rajat's review: `LTTabNav` replaces `LTUnderlineNav` inside the panel (§5, decision 3), the short time formats are a panel-local exception with no guideline changes (§5, decision 7), and lazy loading rides the existing feed idiom rather than a rule amendment (§3.6). Revised again from a second review round: the panel hugs its content under a 60%-of-viewport ceiling (§3.2), a caret ties it to the bell (§3.2), row actions left-align under the text (§3.4, §5 decision 9), and rows slide in from the left — on open, on each lazy-loaded page, and on arrival (§3.8).
 
 Every component and prop below was read from `COMPONENTS.md`. Nothing is invented. Structured prop shapes are marked `TBD` with the Storybook story that shows the real shape.
 
@@ -63,7 +63,7 @@ Titles are prose, so status words take their natural verb forms (`failed`, `succ
 | `LTCounterLabel` | The count in the Unread tab | Composed into the Unread tab's item — LTTabNav documents no counter of its own, and none of its four stories shows one. `scheme="secondary"` per the `guidelines/ltcounterlabel.md` default; omitted at zero. Whether `items` accepts a node: `lttabnav--tab-nav` |
 | `LTText` | Panel heading, row title fragments, meta line, terminal row | Mixed-weight titles compose `as="span"` fragments: `SMALL_BOLD` for actor and object, `SMALL_REGULAR` for the verb phrase. Variant-to-role mapping is the known typography blocker (`guidelines/README.md` §3) |
 | `LTAvatar` | Actor on each row | `initials`, `name`, `size={32}`, `type="circle"`. Initials rules per `mock-data.md` — always initials, never an image. System rows: open question 4 |
-| `LTButton` | Mark all as read; row actions | Header: `variant="invisible"` `size="small"`. Rows: secondary `variant="default"` + primary `variant="primary"`, both `size="small"`, primary last, hard right (`guidelines/README.md` §7; `guidelines/ltbutton.md`) |
+| `LTButton` | Mark all as read; row actions | Header: `variant="invisible"` `size="small"`. Rows: secondary `variant="default"` + primary `variant="primary"`, both `size="small"`, primary last, the pair left-aligned under the row's text (§5 decision 9; `guidelines/ltbutton.md`) |
 | `LTLink` | Attachment chip | Opens a document → link, not button, not tag (`guidelines/ltlink.md`; `guidelines/lttag.md` — tags are read-only). `size="small"`, `leadingIcon` = attachment glyph (icons.md, TO FILL) |
 | `LTInlineMessage` | A row action that failed | `variant="error"` `size="small"`, adjacent to the buttons (`guidelines/notification-messaging.md`: feedback about one control sits next to it). Text mechanism undocumented — TBD → `ltinlinemessage--error` |
 | `LTBlankSlate` | Empty states, one per tab | `heading`, `description`, `narrow`; Unread adds a switch-to-All action (§4) |
@@ -128,7 +128,11 @@ Behaviour the trigger owes, whoever renders it:
 Opens below the bell, right-aligned to it — `align="end"`, outside-bottom (the `Side` enum exists on the component; which prop carries it is undocumented, same TBD).
 
 - **Width 400px** — the middle step of the sanctioned side-pane scale, the "rows are cards with meta" tier (`guidelines/README.md` §2). Do not measure a new width.
-- **Height is viewport-fixed** (brief): `height: calc(100vh − {bar height} − 8px − 16px)` — 8px gap under the bar `[proposed]`, 16px inset from the viewport bottom `[proposed]`, all multiples of 4. The bar-height token is still TBD in `topbar.md` §7; this calc inherits it symbolically. The panel does not grow or shrink with content; short content leaves empty surface below `[per the brief — fixed means fixed]`.
+- **Height hugs the content and stops at 60% of the viewport** (Rajat, second review round, 11 Sep 2026 — this replaces the brief's original "fixed to the viewport height"): `height: auto; max-height: 60vh`. A three-unread Unread tab is a three-row panel; All hits the ceiling and scrolls inside it. The panel sits 8px below the bar `[proposed]`, and the bar-height token is still TBD in `topbar.md` §7.
+
+  **Why it changed:** a fixed-height panel spends most of its surface on nothing whenever the tab is short, which is the common case for Unread and the *point* of the caught-up state. Hugging makes the panel's size carry information — how much is waiting — and the ceiling stops a busy All tab from covering the page it floats over. **The empty and loading states follow the same rule** (§4): "You're all caught up" is a small card, not a tall empty column.
+
+- **A caret at the panel's top-right points at the bell.** It sits 16px in from the panel's right edge — which is the bell's right edge, so the caret centres on the bell's 32px box — and carries the panel's own surface colour and hairline. This is the job Primer's caret does on a popover: tie a floating surface to the control that opened it, so the panel reads as *this* button's, not as a stray overlay. `[proposed geometry: 12px, 6px of it proud of the panel edge]`
 - **Internal split:** header and tabs are fixed; only the list region scrolls (`overflow-y: auto`). The scrollbar belongs to the list, never the whole panel, so the tabs stay reachable mid-feed.
 - **Surface:** `canvas.overlay` background (`TOKENS.md`, `colorSchemes.light.colors.canvas`), 8px radius (the settled listing-container radius), elevation from the **`floating/*`** shadow family — "overlays and raised surfaces", `shadow-tokens-snippets.md`; exact tier `[proposed: floating-small, the dropdown-scale composite — confirm against the Figma overlay specs]`.
 - **Dismiss:** Esc, click outside, and the bell itself (toggle). On close, focus returns to the bell. On open, focus moves into the panel; the panel is `role="dialog"` with `aria-label="Notifications"`, not modal — no page dimming, no focus trap. How much of this LTAnchoredOverlay ships vs. FE adds: open question 1. (The warning in `primer-dos-donts/popover.md` — Primer overlays may handle none of it — is why this is written down rather than assumed.)
@@ -222,9 +226,13 @@ function NotificationRow({ n }) {
 
         {/* Slot, at most one of: */}
 
-        {/* a) Action pair. Secondary (default) left, primary right, hard
-              right per the footer-order rule (guidelines/README.md §7) —
-              which is also the brief's requirement, verbatim. Both small.
+        {/* a) Action pair, left-aligned under the text block and directly
+              below the meta line (Rajat, second review round; it also matches
+              the reference mock, where the pair sits under the text rather
+              than pushed to the row's edge). Secondary then primary, primary
+              on the right — that order is the brief's requirement and the
+              part of guidelines/README.md §7 that carries here; a row's
+              inline actions are not a footer (§5 decision 9). Both small.
               Clicked button takes loading; on failure an LTInlineMessage
               variant="error" size="small" renders adjacent, below the pair
               (notification-messaging.md: feedback next to its control; text
@@ -232,7 +240,7 @@ function NotificationRow({ n }) {
               replaced by a muted SMALL_REGULAR note — "Accepted" /
               "Declined" [proposed] — the row remains as a record. */}
         {n.actions && (
-          <LTBox styles={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "8px" }}>
+          <LTBox styles={{ display: "flex", justifyContent: "flex-start", gap: "8px", marginTop: "8px" }}>
             <LTButton variant="default" size="small" label={n.actions.secondary} onClick={() => {}} />
             <LTButton variant="primary" size="small" label={n.actions.primary} onClick={() => {}} />
           </LTBox>
@@ -295,11 +303,27 @@ Mock values per `mock-data.md` — the approved cast, run and build names, and t
 | 9 | read | **Gabbar Singh** exported 482 test cases from **Web app** | Sep 2 · Test Manager | — |
 | 10 | read | **Mehmed Dracul** deleted 8 test runs | Aug 30 · Test Manager | — |
 
-The awkward rows, deliberately: the longest cast name beside two small buttons (row 1 — the pair must not wrap the title into the dot), a single-letter avatar `O` (row 6, the optical-centring check), the raw-UUID build name that cannot truncate gracefully (row 8), a `.pdf` name long enough to force the attachment link's tooltip (row 4), and a single-digit date (row 9 — the zero-pad question in §5, decision 7, shows here first). Rows 6 and 9–10 are the `project-actions-listing.md` bulk operations arriving as notifications — the two features describe the same events from opposite ends.
+The awkward rows, deliberately: the longest cast name in a row that also carries the action pair (row 1 — the title must clamp at two lines without crowding the dot column, and the buttons must sit under it without stretching the row), a single-letter avatar `O` (row 6, the optical-centring check), the raw-UUID build name that cannot truncate gracefully (row 8), a `.pdf` name long enough to force the attachment link's tooltip (row 4), and a single-digit date (row 9 — the zero-pad question in §5, decision 7, shows here first). Rows 6 and 9–10 are the `project-actions-listing.md` bulk operations arriving as notifications — the two features describe the same events from opposite ends.
+
+### 3.8 Motion
+
+Added in the second review round (Rajat, 11 Sep 2026). **One gesture, used in every place a row appears: it slides in from the left.**
+
+| When | Behaviour |
+|---|---|
+| Panel opens | The rows stagger in, one after another, from the top |
+| Lazy-loaded page | The new page staggers in the same way; rows already on screen do not move |
+| Tab switch | The new tab's rows stagger in — the tab is a new list, not a filtered one |
+| Notification arrives while open | The new row slides in at the top, alone, no stagger |
+
+- **The numbers:** 16px of travel, 260ms, `ease-in`, rows 45ms apart, with the stagger capped at 450ms so a 20-row page finishes settling in about seven tenths of a second rather than a full one. The travel is deliberately shorter than a row is tall — at this size the motion reads as the list *assembling*, not as rows flying in. `[proposed — the one thing to check on a real build is the easing: `ease-in` is what the brief asks for and what this specifies, but it lands at full speed, and an entrance that decelerates (`ease-out`) is the conventional choice if the arrival reads as abrupt. One word either way.]`
+- **The animation belongs to a row appearing, never to a row changing.** It runs when the element mounts, so marking a row read, resolving an invite, or a re-render never re-animates anything. A row that is already on screen when a page loads beneath it stays perfectly still.
+- **An arrival must not move the reader.** Inserting at the top of a feed someone is reading mid-scroll shifts everything down; the scroll position is corrected by the height of what was inserted, so the row the user was reading stays under their eyes (§3.5).
+- **`prefers-reduced-motion: reduce` removes all of it** — no slide, no stagger, rows simply present. This is not optional: repeated motion in a panel that updates itself is exactly what that setting exists for.
 
 ## 4. States
 
-Every panel needs empty, loading and error designed (`guidelines/README.md` §1). Here the empties are per-tab:
+Every panel needs empty, loading and error designed (`guidelines/README.md` §1). Here the empties are per-tab, and **all of them hug the panel to their own height** (§3.2) — an empty state that stretches to 60% of the screen makes "nothing is waiting" look like a failure:
 
 ```jsx
 /* Empty, Unread tab — the good state. One line, one action (README §8);
@@ -362,7 +386,7 @@ The calls made in this proposal, with the rejected alternative each time. All 11
 
 8. **The meta line names the product, not the org.** The reference mock shows a workspace per row because Figma's inbox spans workspaces; this feed is org-scoped by definition (§1), so an org label would repeat the same value on every row. The product is the variable that helps ("which of my seven LambdaTest tabs is this about").
 
-9. **Row actions: exactly the brief's shape, and it matches the house rule.** At most one primary and one secondary, primary to the right — the brief's requirement is `guidelines/README.md` §7's footer order verbatim (secondary → primary, primary hard right), both `small` per the brief. No third action, ever; a notification needing three actions is a page's job.
+9. **Row actions: at most two, primary on the right, the pair left-aligned under the text.** The count and the order come from the brief and agree with `guidelines/README.md` §7 (secondary → primary). The *alignment* does not: §7 pins a footer's actions hard right, and the first draft followed it. Rajat's second review moved the pair left, under the text block — and that is the right call, because a row's inline actions are not a footer. A footer's right edge is the page's or dialog's; a notification row has no footer, and pushing two small buttons to the far edge of a 400px panel separates them from the sentence they answer. Left-aligned, they read as part of the notification. The reference mock does the same. §7 still governs footers, including this panel's own dialogs if it ever gets one.
 
 10. **The unread dot is not a button in v1.** The mock's dot invites click-to-toggle, but a dot-sized control breaks the 24×24 target floor (README §9) and an invisible toggle next to a navigating row invites misclicks. Marking read stays coarse (open the row, or mark all) until open question 6 decides a proper per-row control.
 
@@ -381,7 +405,7 @@ Where this pattern deviates from the supplied screenshot, and why. (The mock is 
 
 ## 7. Layout notes
 
-- Panel: **400px wide** (side-pane scale, README §2) · height `calc(100vh − bar − 8px − 16px)` `[proposed offsets; bar token TBD in topbar.md]` · `canvas.overlay` surface · 8px radius · `floating/*` shadow `[tier proposed: floating-small]`.
+- Panel: **400px wide** (side-pane scale, README §2) · **height hugs content, `max-height: 60vh`** · 8px below the bar `[proposed offset; bar token TBD in topbar.md]` · `canvas.overlay` surface · 8px radius · `floating/*` shadow `[tier proposed: floating-small]` · caret 12px, centred on the bell, 6px proud of the top edge.
 - Padding: 16px panel sides; header `16px 16px 8px`; rows `12px 16px` with a 12px avatar-to-text gap; slots 8px above; meta 4px under the title. All multiples of 4 (README §2).
 - Avatar 32px (`LTAvatar` XLARGE — the top bar's own avatar size). Title clamps at two lines; attachment and object names end-truncate with tooltips.
 - Row separators: `LTDivider`, none after the last row; terminal row centred, muted.
