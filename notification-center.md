@@ -285,7 +285,7 @@ Mock values per `mock-data.md` — the approved cast, run and build names, and t
 | # | Read | Row title | Meta | Slot |
 |---|---|---|---|---|
 | 1 | unread | **Mahendra Damodardas Baahubali** invited you to project **Internal HRMS** | 2:34 PM · Test Manager | Decline (default) · **Accept** (primary, right) |
-| 2 | unread | HyperExecute job **shell-entry-repro-1785646201** failed | 1:05 PM · HyperExecute | — (system row, open question 4) |
+| 2 | unread | HyperExecute job **#3861** failed | 1:05 PM · HyperExecute | — (system row, open question 4; a job's identity is its number, `hyperexecute-jobs-listing.md` §3) |
 | 3 | unread | **Ritika Sharma** assigned you the test run **Regression Suite - Release 8.4** | 11:48 AM · Test Manager | — |
 | 4 | read | **George Orwell** shared the report **Payments Regression - Safari 27 backlog.pdf** | 9:12 AM · Automation | Attachment link (paperclip) |
 | 5 | read | **Darth Vader** approved 12 screenshots in **Web app** | 8:02 AM · SmartUI | — |
