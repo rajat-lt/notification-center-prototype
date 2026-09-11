@@ -17,6 +17,29 @@ primary on the right, small), initials-only avatars, and the panel-local short t
 
 **Live demo:** https://rajat-lt.github.io/notification-center-prototype/ — click the bell.
 
+## The page behind the panel
+
+Test Manager's project listing, built from `design-context/patterns/project-listing.md` so the
+panel is judged against the surface it actually floats over: centred 1232px column (112px from
+the rail's inner edge and from the viewport edge at 1512), heading with the count as its own
+counter, search + Owners / Tags / Products filter dropdowns + Create Project, and rows carrying
+a linked project name, an optional provenance tag, counts, the updated date, the owner's
+initials avatar and an overflow control. Search is wired — it filters by project or owner name,
+updates the count and falls through to the "No results" state.
+
+Two things the pattern asks for that the mock data cannot supply, flagged rather than invented:
+
+- **No long project name.** `mock-data.md` lists nine approved project names and the longest is
+  "Desktop website", so nothing here stresses row truncation.
+- **No pagination.** Nine projects sit well under the 20-per-page default, and pagination is
+  never rendered when everything fits on one page. The pattern includes `LTPagination` because
+  the live page holds 38.
+
+The three filter dropdowns render but open nothing — the pattern does not say what is inside
+them — and the row overflow control is the same: the pattern leaves `LTActionMenu`'s props
+unextracted. Both are named and tooltipped, the treatment the top bar already gives its Credits
+caret. The page's loading and error states are out of scope here; `?state=` belongs to the panel.
+
 ## Run it
 
 ```bash
@@ -53,7 +76,8 @@ The `state` URLs open the panel automatically.
 ## Honesty notes
 
 - **Mock data only** — fictional cast, orgs, projects, run and build names per `mock-data.md`
-  conventions. No real customer data.
+  conventions, including its approved project list and the 30-day relative/absolute date rule.
+  No real customer data.
 - **Not the real component library.** `@lambdatestincprivate/lt-components` is private; this
   prototype hand-rolls visual look-alikes on the Primer foundation, with color values from the
   design-context token extraction (`TOKENS.md`, `colorSchemes.light`) and the panel shadow from

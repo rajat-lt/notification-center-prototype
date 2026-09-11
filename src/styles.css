@@ -29,6 +29,7 @@
   /* accent / blueAccent (TOKENS.md light) */
   --accent: #0969da;
   --accent-subtle: #ddf4ff;
+  --accent-border: rgba(9, 105, 218, 0.4);
 
   /* semantic (TOKENS.md light) */
   --primary-btn: #1f883d;        /* btn.primary.bg */
@@ -221,19 +222,62 @@ a.crumb:hover { color: var(--accent); text-decoration: underline; }
 }
 .btn.primary .btnspin { border-color: rgba(255, 255, 255, 0.35); border-top-color: #fff; }
 
-/* ---------- page (context only) ---------- */
-.page { max-width: 1232px; margin: 0 auto; padding: 24px; }
+/* ---------- project listing (the page behind the panel) ----------
+   Centred single column: 1280px box − 24px padding either side = a 1232px
+   content column, and at the 1512 default that leaves 112px from the rail's
+   inner edge and 112px from the viewport edge (guidelines/README.md §2). The
+   padding doubles as a minimum gutter on narrower screens. */
+.page { max-width: 1280px; margin: 0 auto; padding: 24px; }
 .page h1 { margin: 0; font-size: 24px; font-weight: 600; line-height: 1.25; }
-.page-desc { margin: 8px 0 0; font-size: 14px; color: var(--fg-muted); max-width: 72ch; }
+.page-desc { margin: 4px 0 0; font-size: 14px; color: var(--fg-muted); max-width: 72ch; }
 
-.plist { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 24px; }
-.prow {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 16px; background: var(--bg);
+/* The count is a counter beside the heading, not string-concatenated into it
+   (project-listing.md delta 3) — sized up from the tab counter it shares
+   styles with, to sit against a 24px heading. */
+.pl-head { display: flex; align-items: center; gap: 8px; }
+.pl-head .counter { min-width: 20px; height: 20px; font-size: 12px; padding: 0 6px; }
+
+.pl-filters { display: flex; align-items: center; gap: 12px; margin: 24px 0 16px; }
+.pl-filters .search { flex: 1; }
+
+.search { position: relative; }
+.search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--fg-subtle); }
+.search input {
+  width: 100%; height: 32px; padding: 0 28px 0 32px;
+  border: 1px solid var(--border); border-radius: 6px;
+  font: inherit; font-size: 14px; background: var(--bg); color: var(--fg);
 }
-.prow + .prow { border-top: 1px solid var(--border-muted); }
-.prow-name { font-weight: 600; }
-.prow-meta { font-size: 12px; color: var(--fg-muted); }
+.search input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+.search .clear {
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  border: 0; background: none; color: var(--fg-subtle); cursor: pointer;
+  width: 24px; height: 24px; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+}
+.search .clear:hover { background: var(--neutral-muted); color: var(--fg); }
+
+.pl-list { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--bg); }
+.pl-row { display: flex; align-items: center; gap: 16px; padding: 16px 20px; }
+.pl-row + .pl-row { border-top: 1px solid var(--border-muted); }
+.pl-row:hover { background: var(--bg-subtle); }
+.pl-main { flex: 1; min-width: 0; }
+.pl-titleline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pl-name { font-size: 14px; font-weight: 600; color: var(--accent); text-decoration: none; }
+.pl-name:hover { text-decoration: underline; }
+/* 8px, not the product's 6px — the pattern flags 6 as off the 4px rhythm and
+   says to use 8 (project-listing.md §6). */
+.pl-meta {
+  margin: 8px 0 0; display: flex; align-items: center; flex-wrap: wrap;
+  font-size: 12px; color: var(--fg-muted);
+}
+.pl-meta .dot { margin: 0 4px; }
+
+/* Read-only metadata tag, outline style (guidelines/lttag.md). */
+.tag {
+  display: inline-flex; align-items: center; height: 20px; padding: 0 8px;
+  border-radius: 999px; border: 1px solid var(--accent-border);
+  color: var(--accent); font-size: 12px; font-weight: 500; white-space: nowrap;
+}
 
 .protonote { text-align: center; font-size: 12px; color: var(--fg-subtle); padding: 16px 0 8px; }
 

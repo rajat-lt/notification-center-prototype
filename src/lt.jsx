@@ -59,6 +59,25 @@ export const CreditsIcon = () => (
     <path d="M9.8 6.1a2.4 2.4 0 1 0 0 3.8" {...S} />
   </svg>
 )
+export const SearchIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+    <circle cx="7" cy="7" r="4.5" {...S} />
+    <path d="M10.5 10.5 14 14" {...S} />
+  </svg>
+)
+export const XIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+    <path d="M4 4l8 8M12 4l-8 8" {...S} strokeWidth="1.8" />
+  </svg>
+)
+/* Row overflow — the 3-dot more control. */
+export const MoreIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+    <circle cx="3.5" cy="8" r="1.3" fill="currentColor" />
+    <circle cx="8" cy="8" r="1.3" fill="currentColor" />
+    <circle cx="12.5" cy="8" r="1.3" fill="currentColor" />
+  </svg>
+)
 /* Attachment — paperclip intent; the lucide name is still TO FILL in icons.md
    (notification-center.md §2). */
 export const PaperclipIcon = () => (
@@ -137,13 +156,16 @@ export function StatusIcon({ status, size = 16 }) {
 /* ---------------- primitives ---------------- */
 /* `loading` per guidelines/README.md §7 + ltbutton.md: the button stays in
    place and the label stays visible while the action runs. */
-export function Btn({ variant = '', size = '', caret = false, loading = false, leading, className = '', children, ...rest }) {
+export function Btn({ variant = '', size = '', caret = false, loading = false, counter, leading, className = '', children, ...rest }) {
   return (
     <button type="button" className={`btn ${variant} ${size}${loading ? ' loading' : ''} ${className}`.trim()}
       disabled={loading || rest.disabled} {...rest}>
       {loading && <span className="btnspin" aria-hidden="true" />}
       {!loading && leading}
       <span>{children}</span>
+      {/* Applied-filter count rides the button's own counter slot — the
+          filter-bar recipe in guidelines/README.md §5. */}
+      {counter != null && <span className="counter">{counter}</span>}
       {caret && <span className="caret"><ChevronDown /></span>}
     </button>
   )
@@ -194,6 +216,27 @@ export function TabNav({ items, activeTab, onSelect, ariaLabel }) {
     </div>
   )
 }
+
+/* LTInputBox search look-alike. variant="default" — a search field needs a
+   background, never variant="white" (guidelines/ltinputbox.md). */
+export function SearchInput({ value, onChange, placeholder, ariaLabel }) {
+  return (
+    <div className="search">
+      <SearchIcon />
+      <input type="search" value={value} placeholder={placeholder} aria-label={ariaLabel}
+        onChange={e => onChange(e.target.value)} />
+      {value && (
+        <button type="button" className="clear" aria-label="Clear search" onClick={() => onChange('')}>
+          <XIcon />
+        </button>
+      )}
+    </div>
+  )
+}
+
+/* LTTag look-alike — read-only metadata, outline style in most cases
+   (guidelines/lttag.md). Never clickable, never removable: that is LTToken. */
+export const Tag = ({ text }) => <span className="tag">{text}</span>
 
 /* LTBlankSlate look-alike — heading, description, optional visual and one
    action ("one line, one action", guidelines/README.md §8). */
